@@ -1,27 +1,21 @@
 // Require the necessary discord.js classes
-import 'dotenv/config'
+import { token, testGuildId, isDev } from './config'
 import { Client, GatewayIntentBits } from 'discord.js'
 import { commandsByName } from './commands/all-commands'
-import { deployCommands } from './commands/deploy-commands'
-
-const token = process.env.DISCORD_TOKEN
-const guildId = process.env.DISCORD_TEST_GUILD_ID
-
-if (!token) {
-  throw new Error('Missing token')
-}
-
-if (!guildId) {
-  throw new Error('Missing guild id')
-}
+import { deleteGuildCommands, deployCommands } from './commands/deploy-commands'
 
 // Create a new client instance
 const client = new Client({ intents: [GatewayIntentBits.Guilds] })
 
+const guildId = testGuildId
+
 // When the client is ready, run this code (only once)
 client.once('ready', async () => {
   console.log('Registering commands...')
-  await deployCommands({ client, guildId, token })
+  if (isDev) {
+    await deleteGuildCommands({ client, guildId })
+    await deployCommands({ client, guildId })
+  }
   console.log('Ready!')
 })
 
