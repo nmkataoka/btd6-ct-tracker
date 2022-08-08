@@ -1,7 +1,7 @@
 import { token } from '../config'
 import { Client, SlashCommandBuilder, Routes } from 'discord.js'
 import { REST } from '@discordjs/rest'
-import { allCommands } from './all-commands'
+import { simpleCommands } from './all-commands'
 import { CommandOption } from './types'
 
 const rest = new REST({ version: '10' }).setToken(token)
@@ -28,7 +28,9 @@ function getAddOptionFunc(type: CommandOption['type']) {
 
 export async function deployCommands(args: DeployCommandsArgs) {
   const { client, guildId } = args
-  const commands = allCommands
+
+  // Simple commands that can be constructed in the same way
+  const commands = simpleCommands
     .map((c) => {
       let built: ReturnType<SlashCommandBuilder['addStringOption']> = new SlashCommandBuilder()
         .setName(c.name)

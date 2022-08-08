@@ -1,17 +1,32 @@
 import { ChatInputCommandInteraction } from 'discord.js'
-import { claimTile, captureTile, unclaimTile, reportTaken, setExpiresIn } from '../state/state'
+import { isResult, Result } from '../state/types'
+import {
+  claimTile,
+  captureTile,
+  unclaimTile,
+  reportTaken,
+  setExpiresIn,
+  getAvailableTiles,
+} from '../state/state'
 import { ChatCommand, CommandOption } from './types'
 
 const tileOption: CommandOption = { type: 'string', name: 'tile', description: 'The tile to claim' }
 
 const processResult =
-  (executor: (interaction: ChatInputCommandInteraction) => string) =>
+  (
+    executor: (interaction: ChatInputCommandInteraction) => Promise<Result> | Result,
+    sendMessage = true
+  ) =>
   async (interaction: ChatInputCommandInteraction) => {
     try {
-      const resp = executor(interaction)
-      interaction.reply(resp)
+      const resp = await executor(interaction)
+      if (sendMessage) {
+        interaction.reply(resp.message)
+      }
     } catch (err) {
-      if (typeof err === 'string') {
+      if (isResult(err)) {
+        interaction.reply({ ephemeral: true, content: `${err.message} (${err.error})` })
+      } else if (typeof err === 'string') {
         interaction.reply({ ephemeral: true, content: `❌ ${err}` })
       } else {
         interaction.reply({ ephemeral: true, content: `❌ ${String(err)}` })
@@ -69,7 +84,43 @@ const expiresInCommand: ChatCommand = {
   ],
 }
 
-export const allCommands: ChatCommand[] = [
+let availableCommandMessageIds: Record<string, string | undefined> = {}
+
+async function createNewAvailableMessage(
+  interaction: ChatInputCommandInteraction,
+  content: string
+) {
+  const channelId = interaction.channelId
+  const message = await interaction.reply(content)
+  availableCommandMessageIds[channelId] = message.id
+}
+
+/** Updates a persistent message with available tiless. Creates the message if can't find it. */
+const availableCommand: ChatCommand = {
+  name: 'available',
+  description: 'Returns a list of claimed tiles and available or soon-expiring banners and relics.',
+  execute: processResult(async (i) => {
+    const { message: content } = getAvailableTiles()
+    const messageId = availableCommandMessageIds[i.channelId]
+    if (!i.channel || !messageId) {
+      console.log('creating available message...')
+      await createNewAvailableMessage(i, content)
+      console.log('created message')
+    } else {
+      i.channel.messages.fetch()
+      const message = i.channel.messages.cache.get(messageId)
+      if (!message) {
+        createNewAvailableMessage(i, content)
+      } else {
+        message.edit(content)
+      }
+    }
+    return { message: 'Success' }
+  }, false),
+}
+
+export const simpleCommands: ChatCommand[] = [
+  availableCommand,
   pingCommand,
   capture,
   claimCommand,
@@ -77,7 +128,7 @@ export const allCommands: ChatCommand[] = [
   expiresInCommand,
   takenCommand,
 ]
-export const commandsByName = allCommands.reduce((acc, c) => {
+export const commandsByName = simpleCommands.reduce((acc, c) => {
   acc[c.name] = c
   return acc
 }, {} as Record<string, ChatCommand | undefined>)
