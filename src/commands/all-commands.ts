@@ -103,9 +103,7 @@ const availableCommand: ChatCommand = {
     const { message: content } = getAvailableTiles()
     const messageId = availableCommandMessageIds[i.channelId]
     if (!i.channel || !messageId) {
-      console.log('creating available message...')
       await createNewAvailableMessage(i, content)
-      console.log('created message')
     } else {
       i.channel.messages.fetch()
       const message = i.channel.messages.cache.get(messageId)

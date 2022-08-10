@@ -14,3 +14,6 @@ export const newDate = (arg?: string | number | Date): Date => {
   if (currentDate) return currentDate
   return new Date()
 }
+
+/** Returns in Unix time, which is seconds since 01/01/1970 */
+export const toUnixTime = (date: Date) => Math.round(date.getTime() / 1000)

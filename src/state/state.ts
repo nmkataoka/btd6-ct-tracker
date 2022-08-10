@@ -2,7 +2,7 @@ import { Result, Tile, User } from './types'
 import { settings } from './settings'
 import { Errors } from './errors'
 import { banners, relics } from './data'
-import { newDate } from './date'
+import { newDate, toUnixTime } from './date'
 
 const msInMin = 1000 * 60
 
@@ -408,9 +408,7 @@ ${availableText}${numAvailable > 10 && '\n' + String(numAvailable - 10) + ' more
 *Tile, Type, Tile Expires In*
 ${expiringText}
 
-Last updated: <t:${Math.round(
-      now.getTime() / 1000
-    )}:R>. To update this message, use the "/available" command.
+Last updated: <t:${toUnixTime(now)}:R>. To update this message, use the "/available" command.
 `,
   }
 }

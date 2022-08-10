@@ -1,5 +1,5 @@
 import { banners, relics } from './data'
-import { newDate, resetSystemTime, setSystemTime } from './date'
+import { newDate, resetSystemTime, setSystemTime, toUnixTime } from './date'
 import { Errors } from './errors'
 import { captureTile, claimTile, getAvailableTiles, stateDebug, unclaimTile } from './state'
 import { Tile } from './types'
@@ -191,13 +191,15 @@ ${state.tileNames
   .map((tileName) => state.tiles[tileName])
   .filter((tile): tile is Tile => !!tile && (tile.type === 'relic' || tile.type === 'banner'))
   .map((tile) => `${tile.name}, ${tile.type}`)
+  .slice(0, 10)
   .join('\n')}
+38 more...
 
 **Expiring Soon**
 *Tile, Type, Tile Expires In*
 None
 
-Last updated: <t:${newDate().getTime()}:R>. To update this message, use the "/available" command.
+Last updated: <t:${toUnixTime(newDate())}:R>. To update this message, use the "/available" command.
 `)
     })
 
@@ -207,7 +209,6 @@ Last updated: <t:${newDate().getTime()}:R>. To update this message, use the "/av
       claimTile(bannerA, discordUserA)
       setSystemTime(new Date('2022-01-01T00:05:00.000Z'))
       captureTile(bannerA, discordUserA)
-      console.log('expires at', state.tiles[bannerA]?.expiresAt)
       setSystemTime(new Date('2022-01-01T23:30:00.000Z'))
       claimTile(bannerB, discordUserA)
       claimTile(relicA, discordUserB)
@@ -232,14 +233,16 @@ ${state.tileNames
       !!tile && (otherBanners.includes(tile.name) || otherRelics.includes(tile.name))
   )
   .map((tile) => `${tile.name}, ${tile.type}`)
+  .slice(0, 10)
   .join('\n')}
+34 more...
 
 **Expiring Soon**
 *Tile, Type, Tile Expires In*
 ${bannerA}, banner, 20m
 ${relicA}, relic, 1430m
 
-Last updated: <t:${newDate().getTime()}:R>. To update this message, use the "/available" command.
+Last updated: <t:${toUnixTime(newDate())}:R>. To update this message, use the "/available" command.
 `)
     })
   })

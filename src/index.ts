@@ -1,6 +1,6 @@
 // Require the necessary discord.js classes
-import { token, testGuildId, isDev } from './config'
 import { Client, GatewayIntentBits } from 'discord.js'
+import { token, testGuildId, isDev } from './config'
 import { commandsByName } from './commands/all-commands'
 import { deleteGuildCommands, deployCommands } from './commands/deploy-commands'
 
