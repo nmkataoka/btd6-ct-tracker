@@ -1,4 +1,4 @@
-import { ChatInputCommandInteraction } from 'discord.js'
+import { ChatInputCommandInteraction, InteractionCollector } from 'discord.js'
 import { isResult, Result } from '../state/types'
 import {
   claimTile,
@@ -13,17 +13,15 @@ import { ChatCommand, CommandOption } from './types'
 const tileOption: CommandOption = { type: 'string', name: 'tile', description: 'The tile to claim' }
 
 const processResult =
-  (
-    executor: (interaction: ChatInputCommandInteraction) => Promise<Result> | Result,
-    sendMessage = true
-  ) =>
+  (executor: (interaction: ChatInputCommandInteraction) => Promise<Result> | Result) =>
   async (interaction: ChatInputCommandInteraction) => {
     try {
       const resp = await executor(interaction)
-      if (sendMessage) {
+      if (!interaction.replied) {
         interaction.reply(resp.message)
       }
     } catch (err) {
+      console.error(err)
       if (isResult(err)) {
         interaction.reply({ ephemeral: true, content: `${err.message} (${err.error})` })
       } else if (typeof err === 'string') {
@@ -91,7 +89,8 @@ async function createNewAvailableMessage(
   content: string
 ) {
   const channelId = interaction.channelId
-  const message = await interaction.reply(content)
+  await interaction.reply(content)
+  const message = await interaction.fetchReply()
   availableCommandMessageIds[channelId] = message.id
 }
 
@@ -105,16 +104,16 @@ const availableCommand: ChatCommand = {
     if (!i.channel || !messageId) {
       await createNewAvailableMessage(i, content)
     } else {
-      i.channel.messages.fetch()
-      const message = i.channel.messages.cache.get(messageId)
+      const message = await i.channel.messages.fetch(messageId)
       if (!message) {
         createNewAvailableMessage(i, content)
       } else {
         message.edit(content)
+        return { message: 'Updated pinned post!' }
       }
     }
     return { message: 'Success' }
-  }, false),
+  }),
 }
 
 export const simpleCommands: ChatCommand[] = [
