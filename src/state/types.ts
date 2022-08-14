@@ -11,6 +11,7 @@ export interface User {
 export interface Result {
   error?: Errors
   message: string
+  ephemeral?: boolean
 }
 
 export interface Tile {

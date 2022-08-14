@@ -3,6 +3,7 @@ import { settings } from './settings'
 import { Errors } from './errors'
 import { banners, relics } from './data'
 import { newDate, toUnixTime } from './date'
+import { pad } from './string'
 
 const msInMin = 1000 * 60
 
@@ -371,10 +372,13 @@ export function getAvailableTiles(): Result {
       .map((tileName) => {
         const tile = getTile(tileName)
         const { claimedBy, claimedAt, expiresAt, type } = tile
-
-        return `${tileName}, ${type}, ${claimedBy?.username ?? 'Unknown'}, ${
-          claimedAt && Math.round(getRemainingClaimDuration(tile, now))
-        }m, ${expiresAt && Math.round(getTimeTillExpiration(tile, now))}m`
+        const claimDuration = pad(String(Math.round(getRemainingClaimDuration(tile, now))), 3, true)
+        const expiration = expiresAt
+          ? `${pad(Math.round(getTimeTillExpiration(tile, now)), 3, true)}m`
+          : ''
+        return `${tileName}  ${pad(type, 6)}  ${
+          claimedBy?.username ?? 'Unknown'
+        }, ${claimDuration}m ${expiration}`
       })
       .join('\n') || 'None'
 
@@ -397,8 +401,10 @@ export function getAvailableTiles(): Result {
 
   return {
     message: `**Claimed Tiles**
+\`\`\`
 *Tile, Type, Claimed By, Claim Expires In, Tile Expires In*
 ${claimedText}
+\`\`\`
 
 **Available Relics and Banners**
 *Tile, Type*

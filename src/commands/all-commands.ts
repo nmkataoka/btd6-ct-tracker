@@ -18,7 +18,7 @@ const processResult =
     try {
       const resp = await executor(interaction)
       if (!interaction.replied) {
-        interaction.reply(resp.message)
+        interaction.reply({ content: resp.message, ephemeral: !!resp.ephemeral })
       }
     } catch (err) {
       console.error(err)
@@ -109,7 +109,7 @@ const availableCommand: ChatCommand = {
         createNewAvailableMessage(i, content)
       } else {
         message.edit(content)
-        return { message: 'Updated pinned post!' }
+        return { ephemeral: true, message: 'Updated pinned post!' }
       }
     }
     return { message: 'Success' }
